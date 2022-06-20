@@ -1,0 +1,57 @@
+{
+  "name": "fuel-save-alerter-germany",
+  "version": "1.0.0",
+  "description": "Fuel Save Alerter: a TypeScript version of the heise+ article : 'Günstiger tanken: So lesen Sie Spritpreise automatisch aus'",
+  "main": "./built/cli.js",
+  "bin": {
+    "cli": "./built/cli.js"
+  },
+  "scripts": {
+    "start": "NODE_ENV=dev ts-node src/cli.ts",
+    "build": "tsc",
+    "test": "jest",
+    "typesync": "typesync",
+    "ncu": "npm-check-updates --target minor",
+    "ncu-u": "npm-check-updates --target minor -u",
+    "lint": "eslint \"src/**/*.ts\" --fix",
+    "package": "pkg . --targets node16-linux-x64 --output fsag-gather",
+    "ncc": "ncc build ./src/cli.ts -o dist",
+    "clean": "rm -rf built dist fsag-gather",
+    "typeorm": "typeorm-ts-node-commonjs",
+    "ddl": "npm run typeorm schema:log --  --dataSource src/datasource.ts",
+    "ddlsync": "npm run typeorm schema:sync --  --dataSource src/datasource.ts",
+    "migration_generate": "npm run typeorm migration:generate -- ./migrations/migration --dataSource src/datasource.ts --outputJs",
+    "migration_run": "npm run typeorm migration:run -- --dataSource src/datasource.ts",
+    "migration_revert": "npm run typeorm migration:revert -- --dataSource src/datasource.ts"
+  },
+  "author": "weisser-zwerg.dev",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/eslint": "^8.4.3",
+    "@types/jest": "^27.5.2",
+    "@types/node": "^17.0.45",
+    "@types/pg": "^8.6.5",
+    "@typescript-eslint/eslint-plugin": "^5.28.0",
+    "@typescript-eslint/parser": "^5.28.0",
+    "@vercel/ncc": "^0.34.0",
+    "eslint": "^8.18.0",
+    "jest": "^28.1.1",
+    "npm-check-updates": "^13.1.5",
+    "pkg": "^5.7.0",
+    "ts-jest": "^28.0.5",
+    "ts-node": "^10.8.1",
+    "typescript": "^4.7.4",
+    "typesync": "^0.9.1"
+  },
+  "pkg": {
+    "scripts": "build/**/*.js"
+  },
+  "dependencies": {
+    "axios": "^0.27.2",
+    "dotenv": "^16.0.1",
+    "fp-ts": "^2.12.1",
+    "pg": "^8.7.3",
+    "reflect-metadata": "^0.1.13",
+    "typeorm": "^0.3.6"
+  }
+}

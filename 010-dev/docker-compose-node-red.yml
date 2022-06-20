@@ -1,0 +1,41 @@
+version: "3.8"
+networks:
+  main:
+
+services:
+  postgres:
+    container_name: fsag_nr_postgresql
+    image: 'timescale/timescaledb:latest-pg14'
+    volumes:
+      - data-volume:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    ports:
+      - "127.0.0.1:5432:5432"
+    networks:
+      - main
+  grafana-oss:
+    container_name: fsag_nr_grafana
+    image: 'grafana/grafana-oss:8.5.5'
+    volumes:
+      - grafana-storage:/var/lib/grafana
+    ports:
+      - '127.0.0.1:3000:3000'
+    networks:
+      - main
+  node-red:
+    container_name: fsag_nr_nodered
+    image: 'nodered/node-red:2.2.2-16'
+    environment:
+      - TZ=Europe/Amsterdam
+    ports:
+      - '127.0.0.1:1880:1880'
+    volumes:
+      - nodered-storage:/data
+    networks:
+      - main
+volumes:
+  data-volume:
+  grafana-storage:
+  nodered-storage:
