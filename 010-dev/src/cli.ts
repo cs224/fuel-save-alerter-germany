@@ -6,10 +6,6 @@ import axios from 'axios';
 
 import {Price, Station} from "./model/model";
 
-/*
- * npm run typeorm schema:log --  --dataSource src/datasource.ts
- */
-
 import {dataSource} from "./datasource";
 import {is_production} from "./isproduction";
 
@@ -21,7 +17,6 @@ const apiKey : string = process.env.APIKEY || '';
 const URL = 'https://creativecommons.tankerkoenig.de/json/list.php';
 const params = new URLSearchParams([['lat', `${latitude}`], ['lng', `${longitude}`], ['rad', `${radius}`], ['sort', 'dist'], ['type', 'all'], ['apikey', `${apiKey}`]]);
 
-const createdat = new Date();
 
 function station_from_request(req_station : any) : Station {
     const postCodeNum = req_station.postCode as number;
@@ -47,6 +42,9 @@ function price_from_request(req_station : any) : Price {
     return new Price(id, createdat, isOpen, diesel, e5, e10);
 }
 
+const createdat = new Date();
+let l = 0;
+
 const start = async () : Promise<void> => {
     try {
         await dataSource.initialize();
@@ -70,6 +68,7 @@ const start = async () : Promise<void> => {
             if(!is_production)
                 console.log('Going to insert Price: ' + JSON.stringify(p));
             await dataSource.manager.save(p);
+            l++;
         }
     } catch(error) {
         console.log(error);
@@ -77,4 +76,9 @@ const start = async () : Promise<void> => {
 
 }
 
-start();
+start().then(() => {
+    const enddate = new Date();
+    const duration : number = (enddate.valueOf() - createdat.valueOf()) / 1000.0;
+    console.log(`${enddate} successfully created ${l} price entries. Started at ${createdat}, finished at ${enddate} in ${duration}s`);
+})
+

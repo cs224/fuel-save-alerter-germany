@@ -1,0 +1,7 @@
+---
+# ansible-galaxy install -r requirements.yml
+roles:
+  - src: geerlingguy.ntp
+  - src: geerlingguy.swap
+  #- src: geerlingguy.firewall
+  #- src: geerlingguy.mailhog

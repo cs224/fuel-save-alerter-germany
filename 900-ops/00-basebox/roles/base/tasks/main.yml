@@ -1,0 +1,15 @@
+---
+# tasks file for base
+
+- name: generate de_DE.UTF-8
+  locale_gen:
+    name: de_DE.UTF-8
+    state: present
+  become: yes
+
+- name: Add and update packages
+  import_tasks: apt.yml
+  become: yes
+
+- name: Setup system parameters (timzone)
+  import_tasks: system.yml

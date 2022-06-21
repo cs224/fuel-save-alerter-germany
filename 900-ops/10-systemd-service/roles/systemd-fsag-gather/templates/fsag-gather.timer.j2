@@ -1,0 +1,11 @@
+[Unit]
+Description=fsag-gather timer
+
+[Timer]
+Unit=fsag-gather.service
+# every 20 minutes # https://unix.stackexchange.com/questions/126786/systemd-timer-every-15-minutes
+OnCalendar=*:0/20
+Persistent=true
+
+[Install]
+WantedBy=timers.target

@@ -1,0 +1,74 @@
+# -*- mode: ruby -*-
+
+# You can login to the master via:
+# ssh-add ~/.vagrant.d/insecure_private_key
+# ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no vagrant@192.168.56.101
+# ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -p 2222 vagrant@localhost
+
+# vagrant plugin install vagrant-reload
+# vagrant plugin install vagrant-vbguest
+## vagrant plugin install vagrant-disksize
+
+# https://ostechnix.com/how-to-use-vagrant-with-libvirt-kvm-provider/
+# vagrant plugin install vagrant-libvirt
+# vagrant plugin install vagrant-mutate
+# vagrant up --provider=libvirt
+# export VAGRANT_DEFAULT_PROVIDER=libvirt
+# virsh list
+# vagrant destroy
+
+# vagrant ssh -- -L 5432:localhost:5432
+
+
+Vagrant.require_version ">= 2.2.19"
+
+boxes = [
+    {
+        :name => "master",
+        :eth1 => "192.168.56.101",
+        :mem => "4096",
+        :cpu => "4"
+    },
+]
+
+# enp0s8
+# eth1
+bring_up_host_interface = <<SCRIPT
+sudo ip link set dev enp0s8 up
+SCRIPT
+
+Vagrant.configure("2") do |config|
+
+    # if Vagrant.has_plugin?("vagrant-vbguest")
+    #   config.vbguest.auto_update = false
+    # end
+
+    # config.disksize.size = '15GB'
+
+    config.ssh.forward_agent = true
+    config.ssh.forward_x11 = true
+    config.ssh.insert_key = false
+    config.ssh.shell = "bash -c 'BASH_ENV=/etc/profile exec bash'"
+
+    config.vm.synced_folder ".", "/vagrant"
+
+    boxes.each do |opts|
+        config.vm.define opts[:name] do |config|
+            config.vm.hostname = opts[:name]
+
+            config.vm.box = "bento/ubuntu-22.04"
+            config.vm.box_version = "202206.13.0"
+            config.vm.box_check_update = false
+
+            config.vm.network :private_network, ip: opts[:eth1]
+            config.vm.provision "shell", privileged: false, inline: bring_up_host_interface, keep_color: true, name: "bring_up_host_interface"
+
+            config.vm.provider "virtualbox" do |virtualbox|
+                virtualbox.gui = false
+                virtualbox.customize ["modifyvm", :id, "--memory", opts[:mem]]
+                virtualbox.customize ["modifyvm", :id, "--cpus", opts[:cpu]]
+            end
+        end
+    end
+end
+

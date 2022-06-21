@@ -1,0 +1,56 @@
+---
+# tasks file for systemd-fsag-gather
+- name: Creates directory
+  ansible.builtin.file:
+    path: /opt/fsag-gather
+    state: directory
+    mode: '0755'
+    recurse: yes
+
+- name: copy files
+  ansible.builtin.copy:
+    src: '{{ playbook_dir }}/../../010-dev/{{ item.src }}'
+    dest: /opt/fsag-gather
+    mode: '{{ item.mode }}'
+  with_items:
+    - { src: 'docker-compose.yml', mode: '0644' }
+    - { src: '.env', mode: '0644' }
+    - { src: 'fsag-gather', mode: '0744' }
+
+#  systemctl daemon-reload
+#  systemctl enable ${_Service}.service
+#  systemctl start ${_Service}.service
+- name: set-up docker-compose systemd unit for the fsag infrastructure components
+  ansible.builtin.template: src=fsag-infrastructure.service.j2 dest=/etc/systemd/system/fsag-infrastructure.service
+
+- name: enable, restart and daemon-reload for the fasg infrastructure
+  ansible.builtin.systemd:
+    name: fsag-infrastructure
+    enabled: yes
+    state: restarted
+    daemon_reload: yes
+
+# Use systemd timers instead of cronjobs : https://opensource.com/article/20/7/systemd-timers
+#  > systemctl daemon-reload
+#  > systemctl status fsag-gather.service
+#  > systemctl status fsag-gather.timer
+#  > systemctl start fsag-gather.service
+#  > journalctl -S today    -u fsag-gather.service
+#  > journalctl -S today -f -u fsag-gather.service
+#  > tail -f /tmp/fsag-gather-out.txt
+#  > You do not have to enable the timer to activate it at boot time
+#  > systemctl enable -now fsag-gather.timer # or separate systemctl start fsag-gather.timer afterwards
+#  > systemctl list-timers --all
+
+- name: set-up systemd unit for the fsag-gather service
+  ansible.builtin.template: src=fsag-gather.service.j2 dest=/etc/systemd/system/fsag-gather.service
+
+- name: set-up systemd unit for the fsag-gather timer
+  ansible.builtin.template: src=fsag-gather.timer.j2 dest=/etc/systemd/system/fsag-gather.timer
+
+- name: enable, restart and daemon-reload for the fsag-gather timer
+  ansible.builtin.systemd:
+    name: fsag-gather.timer
+    enabled: yes
+    state: restarted
+    daemon_reload: yes

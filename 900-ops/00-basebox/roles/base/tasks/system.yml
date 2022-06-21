@@ -1,0 +1,15 @@
+- name: Set timezone
+  timezone: name="{{ timezone }}"
+  become: yes
+
+- name: Update timezone
+  command: dpkg-reconfigure --frontend noninteractive tzdata
+  changed_when: False
+  become: yes
+
+- name: adding existing user "{{ ansible_user }}" to group sudo
+  user:
+    name: "{{ ansible_user }}"
+    groups: docker
+    append: yes
+  become: yes

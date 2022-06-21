@@ -1,0 +1,108 @@
+
+- name: Setup apt lean
+  template: src=apt_lean.j2 dest=/etc/apt/apt.conf.d/01lean
+
+- name: set-up /etc/apt/sources.list
+  copy:
+    src: "{{ role_path }}/files/apt-sources.list"
+    dest: "/etc/apt/sources.list"
+    owner: root
+    group: root
+    mode: '0664'
+
+- name: Add apt-transport-https
+  apt:
+    name: 'apt-transport-https'
+    state: present
+    force: yes
+
+# https://docs.docker.com/engine/install/ubuntu/#install-using-the-repository
+# curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /usr/share/keyrings/docker.gpg
+# echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
+# apt-get install docker-ce docker-ce-cli containerd.io docker-compose-plugin
+- name: Add Example GPG key
+  ansible.builtin.get_url:
+    url: https://download.docker.com/linux/ubuntu/gpg
+    dest: /tmp/dockergpg
+    mode: '0644'
+    force: true
+    checksum: sha256:1500c1f56fa9e26b9b8f42452a553675796ade0807cdce11975eb98170b3a570 # curl -sL https://download.docker.com/linux/ubuntu/gpg|sha256sum
+
+- name: De-Armor Docker GPG key
+  ansible.builtin.shell: "gpg --dearmor < /tmp/dockergpg > /usr/share/keyrings/docker-archive-keyring.gpg"
+  args:
+    creates: /usr/share/keyrings/docker-archive-keyring.gpg
+
+#- name: "Add Docker's repository to APT sources list"
+#  ansible.builtin.apt_repository:
+#    repo: "deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable"
+#    state: present
+
+- name: "Add Docker's repository to APT sources list"
+  template: src=apt-docker.list.j2 dest=/etc/apt/sources.list.d/docker.list
+
+- name: Update apt-get repo and cache
+  apt: update_cache=yes force_apt_get=yes cache_valid_time=3600
+
+- name: Perform system upgrades
+  apt:
+    update_cache: yes
+    cache_valid_time: 3600
+    upgrade: yes
+    autoremove: yes
+  when: true # "run_system_upgrades | bool"
+  retries: 2
+  register: _system_upgrade
+  until: _system_upgrade is succeeded
+
+- name: Install aptitude
+  apt:
+    name: "{{ item }}"
+    force: yes
+    state: present
+  with_items:
+    - aptitude
+    - apt-transport-https
+
+- name: Install Packages
+  apt:
+    name: "{{ item }}"
+    force: yes
+    state: present
+  with_items:
+    - net-tools
+    - bridge-utils
+    - hdparm
+    - iperf
+    - mtr-tiny
+    - socat
+    - jq
+    - emacs-nox
+    - wajig
+    - conntrack
+    - telnet
+    - ca-certificates
+    - curl
+    - gnupg
+    - lsb-release
+    - docker-ce
+    - docker-ce-cli
+    - containerd.io
+    - docker-compose-plugin
+    - software-properties-common
+    - python-setuptools
+    - python3-pip
+    - pip
+    - build-essential
+    - git
+    - g++
+    - python3
+    - python-is-python3
+    - ntp
+    - emacs-nox
+    - wajig
+
+- name: Upgrade pip
+  pip:
+    name: pip
+    extra_args: --upgrade

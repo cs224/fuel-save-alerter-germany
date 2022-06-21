@@ -1,0 +1,12 @@
+[Unit]
+Description=fsag-gather service for timer
+After=fasg-infrastructure.service
+Requires=fsag-infrastructure.service
+
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/fsag-gather
+
+ExecStart=/opt/fsag-gather/fsag-gather
+StandardOutput=file:/tmp/fsag-gather-out.txt
+StandardError=inherit
