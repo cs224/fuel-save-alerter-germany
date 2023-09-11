@@ -17,7 +17,6 @@ const apiKey : string = process.env.APIKEY || '';
 const URL = 'https://creativecommons.tankerkoenig.de/json/list.php';
 const params = new URLSearchParams([['lat', `${latitude}`], ['lng', `${longitude}`], ['rad', `${radius}`], ['sort', 'dist'], ['type', 'all'], ['apikey', `${apiKey}`]]);
 
-
 function station_from_request(req_station : any) : Station {
     const postCodeNum = req_station.postCode as number;
     const postCode = String(postCodeNum).padStart(5, '0');
@@ -67,6 +66,12 @@ const start = async () : Promise<void> => {
             const p = price_from_request(station);
             if(!is_production)
                 console.log('Going to insert Price: ' + JSON.stringify(p));
+            if((p.diesel == null) || (p.e5 == null) || (p.e10 == null)) {
+                console.log('Skipping, because there are null values in Price: ' + JSON.stringify(p));
+                const s = station_from_request(station);
+                console.log('Station: ' + JSON.stringify(s));
+                continue;
+            }
             await dataSource.manager.save(p);
             l++;
         }

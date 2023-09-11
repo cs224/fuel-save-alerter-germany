@@ -21,3 +21,11 @@ freeze_data:
 
 unfreeze_data:
 	git ls-files -z data | xargs -0 git update-index --no-skip-worktree
+
+set-up-env:
+	set -o allexport && source .env set && set +o allexport && echo $$LATITUDE && echo $$LONGITUDE && echo $$RADIUS && echo $$APIKEY
+
+curl-test:
+	curl -s -X GET -G "https://creativecommons.tankerkoenig.de/json/list.php" -d lat=$$LATITUDE -d lng=$$LONGITUDE -d rad=$$RADIUS -d sort=dist -d type=all -d apikey=$$APIKEY | jq .
+
+
